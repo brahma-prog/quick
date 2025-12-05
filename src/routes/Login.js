@@ -232,17 +232,11 @@ export default function Login() {
   
   // Simulate API call to check if user exists
   setTimeout(() => {
-
-    const demoUsers = [
-      "test@example.com",
-      "user@example.com",
-      "admin@example.com",
-      "john.doe@example.com"
-    ];
+    // Check in registered users
+    const existingUsers = JSON.parse(localStorage.getItem("registeredUsers") || "[]");
+    const user = existingUsers.find(user => user.email === form.email);
     
-    const userExists = demoUsers.includes(form.email.toLowerCase());
-    
-    if (!userExists) {
+    if (!user) {
       setLoading(false);
       setError("Account not found. Please register first.");
       showToast("Account not found. Please register first.", "error");
@@ -250,12 +244,13 @@ export default function Login() {
       return;
     }
     
-    // Simulate password check (in real app, this would be done on backend)
-    const isValidPassword = form.password.length >= 6; // Simple validation
+    // Check password (in real app, this would be hashed comparison)
+    // For demo, we'll accept any password with at least 6 characters
+    const isValidPassword = form.password.length >= 6;
     
     if (!isValidPassword) {
       setLoading(false);
-      setError("Invalid password. Please try again.");
+      setError("Invalid password. Password must be at least 6 characters.");
       showToast("Invalid password. Please try again.", "error");
       return;
     }
@@ -264,11 +259,13 @@ export default function Login() {
     setLoading(false);
     showToast("Successfully logged in!", "success");
     
-    // Store authentication token (simulated)
+    // Store authentication token and user info
     localStorage.setItem("token", "demo_token_" + Date.now());
-    localStorage.setItem("user", JSON.stringify({
-      name: form.email.split('@')[0],
-      email: form.email,
+    localStorage.setItem("currentUser", JSON.stringify({
+      name: `${user.firstName} ${user.lastName}`,
+      email: user.email,
+      id: user.id || `user_${Date.now()}`,
+      picture: user.picture,
       registered: true
     }));
     

@@ -14,7 +14,7 @@ export default function Navbar() {
     { to: "/doctors", label: "Doctors" },
     { to: "/reviews", label: "Reviews" },
     { to: "/contact", label: "Contact" },
-    { to: "/partner-signup", label: "Partner With Us" },
+    
   ];
 
   // Toggle body scroll when mobile menu is open

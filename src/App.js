@@ -47,7 +47,6 @@ import Services from "./routes/Services";
 import Doctors from "./routes/Doctors";
 import Reviews from "./routes/Reviews";
 import Contact from "./routes/Contact";
-import PartnerSignup from "./routes/PartnerSignup";
 import Login from "./routes/Login";
 import Signup from "./routes/Signup";
 import Dashboard from "./routes/Dashboard";
@@ -104,7 +103,7 @@ export default function App() {
                 <Route path="/doctors" element={<Doctors />} />
                 <Route path="/reviews" element={<Reviews />} />
                 <Route path="/contact" element={<Contact />} />
-                <Route path="/partner-signup" element={<PartnerSignup />} />
+                
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
               </Routes>

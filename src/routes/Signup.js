@@ -124,36 +124,54 @@ export default function Signup() {
   }
 
   function handleCredentialResponse(response) {
-    if (!response?.credential) {
-      setGoogleError("No credential returned");
-      showToast("Google sign-up failed", "error");
-      return;
-    }
-    const payload = parseJwt(response.credential);
-    if (!payload) {
-      setGoogleError("Unable to parse credential");
-      showToast("Google sign-up failed", "error");
-      return;
-    }
-
-    setGoogleUser({
-      id: payload.sub,
-      email: payload.email,
-      name: payload.name,
-      picture: payload.picture,
-    });
-
-    const nameParts = payload.name.split(" ");
-    setForm((prev) => ({
-      ...prev,
-      firstName: nameParts[0] || "",
-      lastName: nameParts.slice(1).join(" ") || "",
-      email: payload.email,
-    }));
-    
-    showToast("Google account linked successfully!", "success");
+  if (!response?.credential) {
+    setGoogleError("No credential returned");
+    showToast("Google sign-up failed", "error");
+    return;
+  }
+  const payload = parseJwt(response.credential);
+  if (!payload) {
+    setGoogleError("Unable to parse credential");
+    showToast("Google sign-up failed", "error");
+    return;
   }
 
+  setGoogleUser({
+    id: payload.sub,
+    email: payload.email,
+    name: payload.name,
+    picture: payload.picture,
+  });
+
+  const nameParts = payload.name.split(" ");
+  setForm((prev) => ({
+    ...prev,
+    firstName: nameParts[0] || "",
+    lastName: nameParts.slice(1).join(" ") || "",
+    email: payload.email,
+  }));
+  
+  // Store Google registered user
+  const googleUserData = {
+    id: payload.sub,
+    firstName: nameParts[0] || "",
+    lastName: nameParts.slice(1).join(" ") || "",
+    email: payload.email,
+    picture: payload.picture,
+    registeredAt: new Date().toISOString(),
+    googleUser: true,
+  };
+  
+  const existingUsers = JSON.parse(localStorage.getItem("registeredUsers") || "[]");
+  const userExists = existingUsers.some(user => user.email === payload.email);
+  
+  if (!userExists) {
+    existingUsers.push(googleUserData);
+    localStorage.setItem("registeredUsers", JSON.stringify(existingUsers));
+  }
+  
+  showToast("Google account registered successfully!", "success");
+}
   const onChange = (e) => {
     const { name, value, type, checked } = e.target;
     setForm((prev) => ({
@@ -200,26 +218,65 @@ export default function Signup() {
   };
 
   const onSubmit = (e) => {
-    e.preventDefault();
-    setSubmitted(true);
+  e.preventDefault();
+  setSubmitted(true);
 
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      Object.values(validationErrors).forEach((error) => {
-        showToast(error, "error");
-      });
+  const validationErrors = validateForm();
+  if (Object.keys(validationErrors).length > 0) {
+    setErrors(validationErrors);
+    Object.values(validationErrors).forEach((error) => {
+      showToast(error, "error");
+    });
+    return;
+  }
+
+  setLoading(true);
+  setTimeout(() => {
+    setLoading(false);
+    
+    // Store the registered user in localStorage
+    const newUser = {
+      firstName: form.firstName,
+      lastName: form.lastName,
+      email: form.email,
+      phone: form.phone,
+      password: form.password, // In real app, this would be hashed
+      registeredAt: new Date().toISOString(),
+    };
+    
+    // Get existing registered users or initialize empty array
+    const existingUsers = JSON.parse(localStorage.getItem("registeredUsers") || "[]");
+    
+    // Check if user already exists
+    const userExists = existingUsers.some(user => user.email === form.email);
+    if (userExists) {
+      showToast("User already exists. Please login.", "error");
+      setTimeout(() => navigate("/login"), 2000);
       return;
     }
-
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      showToast("Account created successfully! Please login.", "success");
-      setTimeout(() => navigate("/login"), 2000);
-    }, 2000);
-  };
-
+    
+    // Add new user to registered users
+    existingUsers.push(newUser);
+    localStorage.setItem("registeredUsers", JSON.stringify(existingUsers));
+    
+    showToast("Account created successfully! Please login.", "success");
+    
+    // Clear form
+    setForm({
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      password: "",
+      confirmPassword: "",
+      acceptTerms: false,
+      newsletter: false,
+    });
+    
+    // Navigate to login after 2 seconds
+    setTimeout(() => navigate("/login"), 2000);
+  }, 2000);
+};
   const passwordStrength = evaluatePasswordStrength(form.password);
 
   // Responsive styles
